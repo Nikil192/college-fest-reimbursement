@@ -1,4 +1,4 @@
-import { Settings, Shield, HardDrive, Smartphone } from "lucide-react";
+import { Shield, HardDrive, Smartphone } from "lucide-react";
 
 export default function SettingsPage() {
   return (

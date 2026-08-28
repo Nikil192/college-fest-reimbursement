@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, CreditCard, MessageSquare, FileText } from 'lucide-react';
-import { approveReimbursement, rejectReimbursement, recordPayment, addComment } from '@/actions/reimbursements';
+import { Check, X, CreditCard, FileText } from 'lucide-react';
+import { approveReimbursement, rejectReimbursement, recordPayment } from '@/actions/reimbursements';
 
 interface Props {
   reimbursement: {
@@ -32,7 +32,7 @@ export default function ReimbursementActions({ reimbursement }: Props) {
     try {
       await approveReimbursement(reimbursement.id, approveAmount, approveNotes);
       setShowApproveModal(false);
-    } catch (err) {
+    } catch {
       alert('Failed to approve reimbursement');
     } finally {
       setIsSubmitting(false);
@@ -45,7 +45,7 @@ export default function ReimbursementActions({ reimbursement }: Props) {
     try {
       await rejectReimbursement(reimbursement.id, rejectReason);
       setShowRejectModal(false);
-    } catch (err) {
+    } catch {
       alert('Failed to reject reimbursement');
     } finally {
       setIsSubmitting(false);
@@ -59,7 +59,7 @@ export default function ReimbursementActions({ reimbursement }: Props) {
     try {
       await recordPayment(reimbursement.id, formData);
       setShowPaymentModal(false);
-    } catch (err) {
+    } catch {
       alert('Failed to record payment');
     } finally {
       setIsSubmitting(false);

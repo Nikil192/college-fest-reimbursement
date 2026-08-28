@@ -36,9 +36,12 @@ export default async function Dashboard() {
   const pendingVerificationCount = allReimbs.filter(r => r.status === 'UNDER_VERIFICATION' || r.status === 'SUBMITTED').length;
   const approvedCount = allReimbs.filter(r => r.status === 'PAYMENT_PENDING' || r.status === 'APPROVED').length;
   
-  const nearLimitFestivals = festivals.filter(f => {
-    // mock calculation
-    return false;
+  const nearLimitFestivals = festivals.filter((festival) => {
+    const paidAmount = allReimbs
+      .filter((reimbursement) => reimbursement.festivalId === festival.id && reimbursement.status === 'PAID')
+      .reduce((sum, reimbursement) => sum + (reimbursement.paidAmount || 0), 0);
+
+    return festival.allocatedBudget > 0 && paidAmount / festival.allocatedBudget >= 0.9;
   }).length;
 
   // Format Currency

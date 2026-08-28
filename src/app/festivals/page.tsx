@@ -1,5 +1,4 @@
 import { Plus, Search, MoreVertical } from "lucide-react";
-import Link from "next/link";
 import prisma from "@/lib/prisma";
 
 export default async function FestivalsPage() {
@@ -67,8 +66,8 @@ export default async function FestivalsPage() {
                 
                 return (
                   <tr key={festival.id} className="border-b border-[var(--card-border)] hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                    <td className="px-6 py-4 font-medium text-blue-600 hover:underline">
-                      <Link href={`/festivals/${festival.id}`}>{festival.name}</Link>
+                    <td className="px-6 py-4 font-medium">
+                      {festival.name}
                     </td>
                     <td className="px-6 py-4">{festival.organization}</td>
                     <td className="px-6 py-4">₹{festival.allocatedBudget.toLocaleString()}</td>

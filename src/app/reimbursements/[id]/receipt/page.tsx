@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { Printer } from "lucide-react";
+import PrintReceiptButton from "@/components/PrintReceiptButton";
 
 export default async function PrintableReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -34,15 +34,10 @@ export default async function PrintableReceiptPage({ params }: { params: Promise
       
       {/* Print Controls bar (Hidden during print) */}
       <div className="max-w-2xl w-full mb-6 flex justify-between items-center print:hidden">
-        <a href={`/reimbursements/${reimbursement.reimbursementNumber}`} className="text-sm text-blue-600 hover:underline">
+        <a href={`/reimbursements/${reimbursement.reimbursementNumber}`} className="text-sm text-blue-700 dark:text-blue-300 hover:underline">
           &larr; Back to Reimbursement
         </a>
-        <button 
-          onClick={() => {}} 
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 shadow"
-        >
-          <Printer className="w-4 h-4" /> Print / Save as PDF
-        </button>
+        <PrintReceiptButton />
       </div>
 
       {/* Official Receipt Card */}
@@ -66,7 +61,7 @@ export default async function PrintableReceiptPage({ params }: { params: Promise
         {/* Details Grid */}
         <div className="grid grid-cols-2 gap-6 mb-8 text-sm">
           <div>
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Paid To (Payee)</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Paid To (Payee)</p>
             <p className="font-bold text-gray-800 text-base">{reimbursement.payee.name}</p>
             <p className="text-gray-600">ID: {reimbursement.payee.studentId || 'N/A'}</p>
             <p className="text-gray-600">Phone: {reimbursement.payee.phone || 'N/A'}</p>
@@ -74,7 +69,7 @@ export default async function PrintableReceiptPage({ params }: { params: Promise
           </div>
 
           <div className="text-right">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Festival & Event</p>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Festival & Event</p>
             <p className="font-bold text-gray-800 text-base">{reimbursement.festival.name}</p>
             <p className="text-gray-600">{reimbursement.festival.organization}</p>
             <p className="text-gray-600">Academic Year: {reimbursement.festival.academicYear}</p>
@@ -141,7 +136,7 @@ export default async function PrintableReceiptPage({ params }: { params: Promise
         </div>
 
         {/* Footer Note */}
-        <div className="mt-8 pt-4 border-t border-gray-200 text-center text-[10px] text-gray-400">
+        <div className="mt-8 pt-4 border-t border-gray-200 text-center text-[10px] text-gray-500">
           This is a computer-generated receipt issued by the College Festival Reimbursement & Expense Management System.
         </div>
       </div>

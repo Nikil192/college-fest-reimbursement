@@ -3,31 +3,52 @@
 import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 
-import { exec } from 'child_process';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+interface PaymentData {
+  amount: number;
+  paymentMethod: string;
+  transactionId?: string;
+  paymentDate: string | Date;
+  remarks?: string;
+}
 
 /**
  * WhatsApp Integration using wacli
  * The user requested to use wacli instead of the official WhatsApp API.
  */
 export async function sendWhatsAppConfirmation(reimbursementId: string) {
-  try {
-    const reimbursement = await prisma.reimbursement.findUnique({
-      where: { id: reimbursementId },
-      include: { payee: true, festival: true, payments: true }
+  const reimbursement = await prisma.reimbursement.findUnique({
+    where: { id: reimbursementId },
+    include: { payee: true, festival: true, payments: true }
+  });
+
+  if (!reimbursement || !reimbursement.payee.phone) {
+    return { success: false, error: 'Missing required data for WhatsApp message.' };
+  }
+
+  const messageText = `Payment Confirmation: Your reimbursement of Rs. ${reimbursement.paidAmount} for ${reimbursement.festival.name} has been processed. Transaction ID: ${reimbursement.payments[0]?.transactionId || 'N/A'}`;
+  const wacliCommand = process.env.WACLI_COMMAND;
+
+  if (!wacliCommand) {
+    await prisma.whatsAppMessage.create({
+      data: {
+        reimbursementId: reimbursement.id,
+        recipientPhone: reimbursement.payee.phone,
+        messageTemplate: messageText,
+        status: 'FAILED',
+        failureReason: 'WACLI_COMMAND is not configured.'
+      }
     });
 
-    if (!reimbursement || !reimbursement.payee.phone) {
-      throw new Error("Missing required data for WhatsApp message.");
-    }
+    return { success: false, error: 'WhatsApp service is not configured.' };
+  }
 
-    const messageText = `Payment Confirmation: Your reimbursement of Rs. ${reimbursement.paidAmount} for ${reimbursement.festival.name} has been processed. Transaction ID: ${reimbursement.payments[0]?.transactionId || 'N/A'}`;
-    
-    // Execute wacli to send the message
-    // Note: This requires wacli to be configured locally in the environment
-    await execAsync(`npx wacli send --phone "${reimbursement.payee.phone}" --message "${messageText}"`);
+  try {
+    await execFileAsync(wacliCommand, ['send', '--phone', reimbursement.payee.phone, '--message', messageText]);
 
     // Record the message in our database
     await prisma.whatsAppMessage.create({
@@ -65,6 +86,7 @@ export async function sendWhatsAppConfirmation(reimbursementId: string) {
  */
 export async function uploadBillToDrive(formData: FormData) {
   try {
+    void formData;
     // const file = formData.get('file') as File;
     // const reimbursementId = formData.get('reimbursementId') as string;
 
@@ -90,7 +112,7 @@ export async function uploadBillToDrive(formData: FormData) {
 /**
  * Update Payment Status
  */
-export async function markAsPaid(reimbursementId: string, paymentData: any) {
+export async function markAsPaid(reimbursementId: string, paymentData: PaymentData) {
   try {
     const reimbursement = await prisma.reimbursement.findUnique({ where: { id: reimbursementId }});
     if (!reimbursement) throw new Error("Not found");

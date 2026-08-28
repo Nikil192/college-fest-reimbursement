@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import Link from "next/link";
-import { CreditCard, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 export default async function PaymentsPage() {
   const payments = await prisma.payment.findMany({

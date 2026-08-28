@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { Users, Smartphone, CreditCard, Search } from "lucide-react";
+import { Smartphone, Search } from "lucide-react";
 
 export default async function PayeesPage() {
   const payees = await prisma.payee.findMany({

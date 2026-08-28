@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { MessageSquare, CheckCircle, Clock } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 
 export default async function NotificationsPage() {
   const messages = await prisma.whatsAppMessage.findMany({

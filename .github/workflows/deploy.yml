@@ -1,0 +1,89 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: college-fest-reimbursement-production
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Validate Prisma schema
+        run: npx prisma validate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  deploy:
+    name: Deploy
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Configure SSH
+        env:
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -d -m 700 ~/.ssh
+          install -m 600 /dev/null ~/.ssh/college_fest_deploy
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/college_fest_deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Deploy application
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/college_fest_deploy -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" 'bash -se' <<'REMOTE'
+            source "$HOME/.nvm/nvm.sh"
+            app_dir="$HOME/college-fest-reimbursement"
+
+            git -C "$app_dir" pull --ff-only origin main
+            npm --prefix "$app_dir" ci
+            npm --prefix "$app_dir" run db:generate
+            npm --prefix "$app_dir" run db:deploy
+            npm --prefix "$app_dir" run build
+            pm2 startOrReload "$app_dir/ecosystem.config.cjs" --only college-fest-reimbursement
+            pm2 save
+
+            for attempt in {1..15}; do
+              if curl --fail --silent --show-error http://127.0.0.1:3001/api/health > /dev/null; then
+                exit 0
+              fi
+              sleep 2
+            done
+
+            curl --fail --silent --show-error http://127.0.0.1:3001/api/health > /dev/null
+          REMOTE

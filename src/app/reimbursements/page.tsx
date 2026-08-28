@@ -85,7 +85,7 @@ export default async function ReimbursementsPage() {
                       </span>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <Link href={`/reimbursements/${r.reimbursementNumber}${['SUBMITTED', 'UNDER_VERIFICATION'].includes(r.status) ? '/verify' : ''}`} className="text-blue-600 hover:underline font-medium">
+                      <Link href={`/reimbursements/${r.reimbursementNumber}`} className="text-blue-600 hover:underline font-medium">
                       {['SUBMITTED', 'UNDER_VERIFICATION'].includes(r.status) ? 'Verify' : 'View'}
                     </Link>
                   </td>

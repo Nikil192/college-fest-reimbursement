@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# College Fest Reimbursement
+
+A Next.js reimbursement management application backed by a local SQLite database through Prisma.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and create the SQLite database:
+
+```bash
+npm install
+npm run db:deploy
+npm run db:seed
+```
+
+Then run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+SQLite is the only supported database. Prisma stores the local database at `prisma/dev.db`; no database server or `DATABASE_URL` is required.
 
-## Learn More
+Useful commands:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run db:generate # regenerate the Prisma client
+npm run db:deploy   # apply committed migrations
+npm run db:migrate  # create and apply a development migration
+npm run db:seed     # load sample data
+npm run db:studio   # inspect the SQLite database
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For production, deploy to a host with persistent filesystem storage for `prisma/dev.db`. Ephemeral or read-only serverless filesystems will not preserve SQLite data. The included GitHub Actions workflow deploys to a PM2-managed Oracle VPS on port `3001` and applies committed Prisma migrations before restarting the app.

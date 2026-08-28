@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { Download, BarChart3, PieChart, TrendingUp } from "lucide-react";
+import { Download, BarChart3, PieChart } from "lucide-react";
 
 export default async function ReportsPage() {
   const festivals = await prisma.festival.findMany({

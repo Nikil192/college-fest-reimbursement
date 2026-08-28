@@ -68,7 +68,7 @@ export default function Sidebar() {
       </div>
 
       <div className="flex flex-shrink-0 border-t border-gray-800 p-4">
-        <Link href="/profile" className="group block w-full flex-shrink-0">
+        <div className="block w-full flex-shrink-0">
           <div className="flex items-center">
             <div>
               <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500">
@@ -77,10 +77,10 @@ export default function Sidebar() {
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-white">Admin User</p>
-              <p className="text-xs font-medium text-gray-400 group-hover:text-gray-300">View profile</p>
+              <p className="text-xs font-medium text-gray-400">Administrator</p>
             </div>
           </div>
-        </Link>
+        </div>
       </div>
     </div>
   );
