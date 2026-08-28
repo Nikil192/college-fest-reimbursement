@@ -1,0 +1,176 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  role          String    @default("ADMIN") // ADMIN, ASSISTANT
+  password      String?
+  createdAt     DateTime  @default(now())
+  lastLogin     DateTime?
+
+  comments      Comment[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+}
+
+model Festival {
+  id                String    @id @default(cuid())
+  name              String
+  organization      String
+  academicYear      String
+  festivalDate      DateTime?
+  startDate         DateTime?
+  endDate           DateTime?
+  allocatedBudget   Float
+  status            String    @default("ACTIVE") // PLANNED, ACTIVE, COMPLETED, CLOSED
+  description       String?
+  coordinatorName   String?
+  coordinatorPhone  String?
+  coordinatorEmail  String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  reimbursements    Reimbursement[]
+}
+
+model Payee {
+  id                     String    @id @default(cuid())
+  name                   String
+  studentId              String?
+  phone                  String?
+  email                  String?
+  bankName               String?
+  accountNumberEncrypted String?
+  ifsc                   String?
+  upiId                  String?
+  payeeType              String?   // Student, Staff, Vendor, etc.
+  active                 Boolean   @default(true)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  reimbursements         Reimbursement[]
+}
+
+model Reimbursement {
+  id                  String    @id @default(cuid())
+  reimbursementNumber String    @unique // REIM-2026-0001
+  festivalId          String
+  payeeId             String
+  category            String
+  description         String
+  expenseDate         DateTime
+  submittedDate       DateTime  @default(now())
+  requestedAmount     Float
+  approvedAmount      Float?
+  paidAmount          Float?
+  status              String    @default("SUBMITTED") // DRAFT, SUBMITTED, UNDER_VERIFICATION, APPROVED, REJECTED, PAYMENT_PENDING, PAID, CANCELLED
+  currency            String    @default("INR")
+  
+  createdBy           String?
+  approvedBy          String?
+  paidBy              String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  festival            Festival  @relation(fields: [festivalId], references: [id])
+  payee               Payee     @relation(fields: [payeeId], references: [id])
+  
+  documents           Document[]
+  payments            Payment[]
+  comments            Comment[]
+  whatsappMessages    WhatsAppMessage[]
+}
+
+model Document {
+  id               String    @id @default(cuid())
+  reimbursementId  String
+  fileName         String
+  fileType         String
+  fileSize         Int?
+  driveFileId      String?
+  driveUrl         String?
+  documentType     String    // BILL, PAYMENT_PROOF, ADDITIONAL
+  verificationStatus String  @default("PENDING") // PENDING, VERIFIED, REJECTED
+  uploadedBy       String?
+  uploadedAt       DateTime  @default(now())
+
+  reimbursement    Reimbursement @relation(fields: [reimbursementId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                      String    @id @default(cuid())
+  paymentNumber           String    @unique // PAY-2026-0001
+  reimbursementId         String
+  amount                  Float
+  paymentMethod           String
+  transactionId           String?
+  paymentDate             DateTime
+  paymentProofDocumentId  String?
+  recordedBy              String?
+  paymentRemarks          String?
+  createdAt               DateTime  @default(now())
+
+  reimbursement           Reimbursement @relation(fields: [reimbursementId], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id               String        @id @default(cuid())
+  reimbursementId String
+  userId           String?
+  comment          String
+  createdAt        DateTime      @default(now())
+
+  reimbursement    Reimbursement @relation(fields: [reimbursementId], references: [id], onDelete: Cascade)
+  user             User?         @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String
+  title       String
+  message     String
+  readStatus  Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model WhatsAppMessage {
+  id                 String    @id @default(cuid())
+  reimbursementId    String
+  recipientPhone     String
+  messageTemplate    String?
+  status             String    @default("QUEUED") // NOT_SENT, QUEUED, SENT, DELIVERED, FAILED
+  providerMessageId  String?
+  sentAt             DateTime?
+  deliveredAt        DateTime?
+  failureReason      String?
+
+  reimbursement      Reimbursement @relation(fields: [reimbursementId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String    @id @default(cuid())
+  userId      String?
+  entityType  String
+  entityId    String
+  action      String
+  oldValue    String?
+  newValue    String?
+  reason      String?
+  createdAt   DateTime  @default(now())
+
+  user        User?     @relation(fields: [userId], references: [id])
+}
