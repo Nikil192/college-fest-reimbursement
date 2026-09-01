@@ -1,5 +1,6 @@
 import { Plus, Search, MoreVertical } from "lucide-react";
 import prisma from "@/lib/prisma";
+import Link from "next/link";
 
 export default async function FestivalsPage() {
   const festivals = await prisma.festival.findMany({
@@ -16,10 +17,10 @@ export default async function FestivalsPage() {
           <h1 className="text-2xl font-bold">Festivals</h1>
           <p className="text-gray-500">Manage all college festivals and their budgets.</p>
         </div>
-        <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+        <Link href="/festivals/new" className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
           <Plus className="w-4 h-4" />
           New Festival
-        </button>
+        </Link>
       </div>
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-sm mb-6">
