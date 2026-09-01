@@ -28,18 +28,20 @@ export default async function FestivalsPage() {
           <div className="relative">
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input 
+              id="festival-search"
+              name="festivalSearch"
               type="text" 
               placeholder="Search festivals..." 
               className="pl-10 pr-4 py-2 border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
             />
           </div>
           <div className="flex gap-2">
-            <select className="border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="academic-year-filter" name="academicYear" aria-label="Filter by academic year" className="border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option>All Years</option>
               <option>2026-27</option>
               <option>2025-26</option>
             </select>
-            <select className="border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select id="festival-status-filter" name="status" aria-label="Filter by festival status" className="border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option>Status: All</option>
               <option>Active</option>
               <option>Completed</option>
@@ -80,7 +82,7 @@ export default async function FestivalsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                      <button type="button" aria-label={`Actions for ${festival.name}`} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
                         <MoreVertical className="w-5 h-5" />
                       </button>
                     </td>
