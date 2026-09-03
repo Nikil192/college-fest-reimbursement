@@ -56,11 +56,11 @@ jobs:
       - name: Configure SSH
         env:
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_SSH_KEY_B64: ${{ secrets.DEPLOY_SSH_KEY_B64 }}
         run: |
           install -d -m 700 ~/.ssh
           install -m 600 /dev/null ~/.ssh/college_fest_deploy
-          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/college_fest_deploy
+          printf '%s' "$DEPLOY_SSH_KEY_B64" | base64 --decode > ~/.ssh/college_fest_deploy
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
 
       - name: Deploy application
