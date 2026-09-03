@@ -3,34 +3,42 @@
 import { FormEvent, useState } from "react";
 import { KeyRound, LockKeyhole } from "lucide-react";
 import { useRouter } from "next/navigation";
-import {
-  SITE_ACCESS_KEY,
-  SITE_ACCESS_VALUE,
-  SITE_PASSWORD,
-} from "@/lib/site-access";
+import { verifySitePassword } from "@/actions/site-access";
+import { SITE_ACCESS_KEY, SITE_ACCESS_VALUE } from "@/lib/site-access";
 
 export default function PasswordPage() {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setIsSubmitting(true);
+    setError("");
 
-    if (password !== SITE_PASSWORD) {
-      setError("That password is incorrect. Please try again.");
-      return;
+    try {
+      const result = await verifySitePassword(password);
+
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      window.localStorage.setItem(SITE_ACCESS_KEY, SITE_ACCESS_VALUE);
+
+      const requestedPath = new URLSearchParams(window.location.search).get("next");
+      const destination =
+        requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
+          ? requestedPath
+          : "/";
+
+      router.replace(destination);
+    } catch {
+      setError("Could not verify the password. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    window.localStorage.setItem(SITE_ACCESS_KEY, SITE_ACCESS_VALUE);
-
-    const requestedPath = new URLSearchParams(window.location.search).get("next");
-    const destination =
-      requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
-        ? requestedPath
-        : "/";
-
-    router.replace(destination);
   }
 
   return (
@@ -92,10 +100,11 @@ export default function PasswordPage() {
           </div>
 
           <button
-            className="flex h-12 w-full items-center justify-center bg-blue-400 px-5 text-sm font-bold text-[#101820] transition hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 focus:ring-offset-[#16212b]"
+            className="flex h-12 w-full items-center justify-center bg-blue-400 px-5 text-sm font-bold text-[#101820] transition hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 focus:ring-offset-[#16212b] disabled:cursor-wait disabled:opacity-70"
+            disabled={isSubmitting}
             type="submit"
           >
-            Unlock workspace
+            {isSubmitting ? "Checking..." : "Unlock workspace"}
           </button>
         </form>
 
