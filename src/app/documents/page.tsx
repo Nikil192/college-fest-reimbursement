@@ -20,7 +20,7 @@ export default async function DocumentsPage() {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold">Document Repository</h1>
-          <p className="text-gray-500">Centralized Google Drive bill and receipt archives.</p>
+          <p className="text-gray-500">Bills and receipts stored securely on this server.</p>
         </div>
       </div>
 
@@ -35,7 +35,7 @@ export default async function DocumentsPage() {
                 <th className="px-6 py-3">Payee</th>
                 <th className="px-6 py-3">Festival</th>
                 <th className="px-6 py-3">Uploaded Date</th>
-                <th className="px-6 py-3 text-right">Drive Action</th>
+                <th className="px-6 py-3 text-right">File Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--card-border)]">
@@ -59,14 +59,18 @@ export default async function DocumentsPage() {
                   <td className="px-6 py-4">{doc.reimbursement.festival.name}</td>
                   <td className="px-6 py-4 text-gray-500">{new Date(doc.uploadedAt).toLocaleDateString()}</td>
                   <td className="px-6 py-4 text-right">
-                    <a
-                      href={doc.driveUrl || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-xs font-medium inline-flex items-center gap-1"
-                    >
-                      Open Drive <ExternalLink className="w-3 h-3" />
-                    </a>
+                    {doc.storageKey ? (
+                      <a
+                        href={`/api/documents/${doc.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:underline text-xs font-medium inline-flex items-center gap-1"
+                      >
+                        Open File <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-xs text-gray-400">Unavailable</span>
+                    )}
                   </td>
                 </tr>
               ))}

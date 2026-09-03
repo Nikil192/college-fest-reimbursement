@@ -98,8 +98,7 @@ model Document {
   fileName         String
   fileType         String
   fileSize         Int?
-  driveFileId      String?
-  driveUrl         String?
+  storageKey       String?   @unique
   documentType     String    // BILL, PAYMENT_PROOF, ADDITIONAL
   verificationStatus String  @default("PENDING") // PENDING, VERIFIED, REJECTED
   uploadedBy       String?

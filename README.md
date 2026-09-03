@@ -34,4 +34,4 @@ npm run db:seed     # load sample data
 npm run db:studio   # inspect the SQLite database
 ```
 
-For production, deploy to a host with persistent filesystem storage for `prisma/dev.db`. Ephemeral or read-only serverless filesystems will not preserve SQLite data. The included GitHub Actions workflow deploys to a PM2-managed Oracle VPS on port `3001` and applies committed Prisma migrations before restarting the app.
+For production, deploy to a host with persistent filesystem storage for both `prisma/dev.db` and `storage/documents`. Ephemeral or read-only serverless filesystems will not preserve application data. Set `DOCUMENT_STORAGE_DIR` to use a different absolute document directory. The included GitHub Actions workflow deploys to a PM2-managed Oracle VPS on port `3001` and applies committed Prisma migrations before restarting the app.

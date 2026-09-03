@@ -1,9 +1,10 @@
 'use server';
 
 import prisma from '@/lib/prisma';
+import { deleteStoredDocument, storeDocument } from '@/lib/document-storage';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { uploadBillToDrive, sendWhatsAppConfirmation } from './integrations';
+import { sendWhatsAppConfirmation } from './integrations';
 
 export async function submitReimbursement(formData: FormData) {
   const festivalId = formData.get('festivalId') as string;
@@ -17,71 +18,80 @@ export async function submitReimbursement(formData: FormData) {
   const phone = formData.get('phone') as string;
   const upiId = formData.get('upiId') as string;
   
-  const file = formData.get('file') as File;
+  const file = formData.get('file');
 
-  // Check if payee already exists or create new
-  let payee = await prisma.payee.findFirst({
-    where: {
-      OR: [
-        { phone: phone || undefined },
-        { studentId: studentId || undefined }
-      ]
-    }
-  });
-
-  if (!payee) {
-    payee = await prisma.payee.create({
-      data: {
-        name: payeeName,
-        studentId: studentId || null,
-        phone: phone || null,
-        upiId: upiId || null,
-        payeeType: 'Student'
-      }
-    });
+  if (!(file instanceof File)) {
+    throw new Error('A document is required.');
   }
 
-  // Create Reimbursement
+  const storedDocument = await storeDocument(file);
   const reimbursementNumber = `REIM-2026-${Math.floor(10000 + Math.random() * 90000)}`;
-  const reimbursement = await prisma.reimbursement.create({
-    data: {
-      reimbursementNumber,
-      festivalId,
-      payeeId: payee.id,
-      category,
-      description,
-      expenseDate: new Date(expenseDate),
-      requestedAmount: amount,
-      status: 'SUBMITTED'
-    }
-  });
 
-  // Create Audit Log
-  await prisma.auditLog.create({
-    data: {
-      entityType: 'Reimbursement',
-      entityId: reimbursement.id,
-      action: 'SUBMITTED',
-      newValue: 'SUBMITTED',
-      reason: 'New reimbursement request submitted'
-    }
-  });
+  try {
+    await prisma.$transaction(async (tx) => {
+      let payee = await tx.payee.findFirst({
+        where: {
+          OR: [
+            { phone: phone || undefined },
+            { studentId: studentId || undefined }
+          ]
+        }
+      });
 
-  // Handle File Upload
-  if (file && file.size > 0) {
-    const uploadResult = await uploadBillToDrive(formData);
-    if (uploadResult.success) {
-      await prisma.document.create({
+      if (!payee) {
+        payee = await tx.payee.create({
+          data: {
+            name: payeeName,
+            studentId: studentId || null,
+            phone: phone || null,
+            upiId: upiId || null,
+            payeeType: 'Student'
+          }
+        });
+      }
+
+      const reimbursement = await tx.reimbursement.create({
+        data: {
+          reimbursementNumber,
+          festivalId,
+          payeeId: payee.id,
+          category,
+          description,
+          expenseDate: new Date(expenseDate),
+          requestedAmount: amount,
+          status: 'SUBMITTED'
+        }
+      });
+
+      await tx.auditLog.create({
+        data: {
+          entityType: 'Reimbursement',
+          entityId: reimbursement.id,
+          action: 'SUBMITTED',
+          newValue: 'SUBMITTED',
+          reason: 'New reimbursement request submitted'
+        }
+      });
+
+      await tx.document.create({
         data: {
           reimbursementId: reimbursement.id,
           documentType: 'BILL',
           fileName: file.name,
-          fileType: file.type || 'application/pdf',
-          driveUrl: uploadResult.driveUrl,
-          driveFileId: uploadResult.driveFileId
+          fileType: storedDocument.fileType,
+          fileSize: storedDocument.fileSize,
+          storageKey: storedDocument.storageKey
         }
       });
+    });
+  } catch (error) {
+    try {
+      await deleteStoredDocument(storedDocument.storageKey);
+    } catch (cleanupError) {
+      console.error('Failed to clean up document after reimbursement error:', cleanupError);
     }
+
+    throw error;
   }
 
   revalidatePath('/');

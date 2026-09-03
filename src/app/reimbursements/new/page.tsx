@@ -130,13 +130,14 @@ export default async function NewReimbursementPage() {
             <h3 className="text-lg font-medium border-b border-[var(--card-border)] pb-2 mb-4">Documents (Bill / Invoice)</h3>
             <div className="border border-[var(--card-border)] rounded-xl p-4 bg-gray-50 dark:bg-gray-800/30">
               <label className="block text-sm font-medium mb-2">Upload File</label>
-              <input type="file" name="file" required className="w-full text-sm text-gray-500
+              <input type="file" name="file" required accept="application/pdf,image/jpeg,image/png,image/webp" className="w-full text-sm text-gray-500
                 file:mr-4 file:py-2 file:px-4
                 file:rounded-lg file:border-0
                 file:text-sm file:font-semibold
                 file:bg-blue-50 file:text-blue-700
                 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400" 
               />
+              <p className="mt-2 text-xs text-gray-500">PDF, JPEG, PNG, or WebP. Maximum 10 MB.</p>
             </div>
           </section>
 

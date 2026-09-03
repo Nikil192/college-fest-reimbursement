@@ -6,6 +6,9 @@
 /prisma/*.db-shm
 /prisma/*.db-wal
 
+# Uploaded reimbursement documents
+/storage/
+
 # dependencies
 /node_modules
 /.pnp

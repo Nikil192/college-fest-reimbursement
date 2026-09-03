@@ -87,9 +87,13 @@ export default async function ReimbursementDetailPage({ params }: { params: Prom
                           <p className="text-xs text-gray-500">{doc.documentType} • {new Date(doc.uploadedAt).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <a href={doc.driveUrl || '#'} target="_blank" className="text-blue-600 text-sm hover:underline font-medium">
-                        View Document
-                      </a>
+                      {doc.storageKey ? (
+                        <a href={`/api/documents/${doc.id}`} target="_blank" rel="noopener noreferrer" className="text-blue-600 text-sm hover:underline font-medium">
+                          View Document
+                        </a>
+                      ) : (
+                        <span className="text-sm text-gray-400">File unavailable</span>
+                      )}
                     </div>
                   ))}
                 </div>

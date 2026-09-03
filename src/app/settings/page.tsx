@@ -38,26 +38,26 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {/* Google Drive Configuration */}
+        {/* Document storage */}
         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-6 shadow-sm">
           <div className="flex items-start gap-4">
             <div className="p-3 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-lg">
               <HardDrive className="w-6 h-6" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-1">Google Drive Storage API</h3>
+              <h3 className="text-lg font-semibold mb-1">Local Document Storage</h3>
               <p className="text-sm text-gray-500 mb-4">
-                All uploaded bills are saved to the designated Google Drive organization folder.
+                Uploaded bills are stored directly on this server and served through the application.
               </p>
               
               <div className="space-y-3 bg-gray-50 dark:bg-gray-800/40 p-4 rounded-lg border border-[var(--card-border)]">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="font-medium">Drive Storage Root</span>
-                  <span className="font-mono text-xs text-blue-600">drive/folders/fest-reimbursements-2026</span>
+                  <span className="font-medium">Storage Directory</span>
+                  <span className="font-mono text-xs text-blue-600">storage/documents</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="font-medium">API Service Account</span>
-                  <span className="text-xs">reimbursements-sa@college-fest.iam.gserviceaccount.com</span>
+                  <span className="font-medium">Maximum File Size</span>
+                  <span className="text-xs">10 MB</span>
                 </div>
               </div>
             </div>

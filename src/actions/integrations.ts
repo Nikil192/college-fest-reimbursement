@@ -82,34 +82,6 @@ export async function sendWhatsAppConfirmation(reimbursementId: string) {
 }
 
 /**
- * Google Drive API Integration (Stub)
- */
-export async function uploadBillToDrive(formData: FormData) {
-  try {
-    void formData;
-    // const file = formData.get('file') as File;
-    // const reimbursementId = formData.get('reimbursementId') as string;
-
-    // Real implementation would use googleapis:
-    // const auth = new google.auth.GoogleAuth({ scopes: ['https://www.googleapis.com/auth/drive.file'] });
-    // const drive = google.drive({ version: 'v3', auth });
-    // const response = await drive.files.create({
-    //    requestBody: { name: file.name, parents: [process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID] },
-    //    media: { mimeType: file.type, body: Readable.from(await file.arrayBuffer()) }
-    // });
-
-    return { 
-      success: true, 
-      driveUrl: "https://drive.google.com/file/d/mock-id/view",
-      driveFileId: "mock-id"
-    };
-  } catch (error) {
-    console.error("Google Drive Upload Error:", error);
-    return { success: false, error: "Upload failed." };
-  }
-}
-
-/**
  * Update Payment Status
  */
 export async function markAsPaid(reimbursementId: string, paymentData: PaymentData) {
