@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import clsx from "clsx";
 import { 
   LayoutDashboard, 
   PartyPopper, 
@@ -26,9 +30,13 @@ const secondaryNavigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+
+  const isCurrent = (href: string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
+
   return (
-    <div className="flex h-screen w-64 flex-col bg-[var(--sidebar-bg)] text-[var(--sidebar-fg)] border-r border-[var(--card-border)]">
+    <aside className="flex h-dvh w-full flex-col border-r border-[var(--card-border)] bg-[var(--sidebar-bg)] text-[var(--sidebar-fg)] lg:w-64">
       <div className="flex h-16 items-center px-6 text-xl font-bold tracking-tight">
         FestAdmin
       </div>
@@ -42,7 +50,9 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center rounded-md px-2 py-2 text-sm font-medium hover:bg-gray-800 hover:text-white"
+                aria-current={isCurrent(item.href) ? "page" : undefined}
+                onClick={onNavigate}
+                className={clsx("group flex min-h-11 items-center rounded-md px-2 py-2 text-sm font-medium hover:bg-gray-800 hover:text-white", isCurrent(item.href) && "bg-gray-800 text-white")}
               >
                 <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-300" />
                 {item.name}
@@ -57,7 +67,9 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className="group flex items-center rounded-md px-2 py-2 text-sm font-medium hover:bg-gray-800 hover:text-white"
+                aria-current={isCurrent(item.href) ? "page" : undefined}
+                onClick={onNavigate}
+                className={clsx("group flex min-h-11 items-center rounded-md px-2 py-2 text-sm font-medium hover:bg-gray-800 hover:text-white", isCurrent(item.href) && "bg-gray-800 text-white")}
               >
                 <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 group-hover:text-gray-300" />
                 {item.name}
@@ -82,6 +94,6 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }

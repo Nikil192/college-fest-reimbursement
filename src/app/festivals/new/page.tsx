@@ -2,16 +2,16 @@ import { ArrowLeft, CalendarDays, IndianRupee, Save } from 'lucide-react';
 import Link from 'next/link';
 import { createFestival } from '@/actions/festivals';
 
-const inputClass = 'w-full rounded-lg border border-[var(--card-border)] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-900';
+const inputClass = 'min-h-11 w-full rounded-lg border border-[var(--card-border)] bg-white px-3 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:bg-gray-900';
 
 export default function NewFestivalPage() {
   return (
-    <div className="mx-auto max-w-5xl p-8">
+    <div className="page-container mx-auto max-w-5xl">
       <div className="mb-7 flex items-center gap-4">
         <Link
           href="/festivals"
           aria-label="Back to festivals"
-          className="rounded-full bg-gray-100 p-2 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-100 transition-colors hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
@@ -23,7 +23,7 @@ export default function NewFestivalPage() {
       </div>
 
       <form action={createFestival} className="overflow-hidden rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] shadow-sm">
-        <div className="grid gap-8 p-6 lg:grid-cols-[1.4fr_1fr]">
+        <div className="grid gap-8 p-4 sm:p-6 lg:grid-cols-[1.4fr_1fr]">
           <div className="space-y-7">
             <section>
               <div className="mb-4 flex items-center gap-2 border-b border-[var(--card-border)] pb-3">
@@ -56,7 +56,7 @@ export default function NewFestivalPage() {
                   Festival Date
                   <input type="date" name="festivalDate" className={`${inputClass} mt-1.5`} />
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <label className="text-sm font-medium">
                     Start Date
                     <input type="date" name="startDate" className={`${inputClass} mt-1.5`} />
@@ -107,11 +107,11 @@ export default function NewFestivalPage() {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[var(--card-border)] bg-gray-50 px-6 py-4 dark:bg-gray-800/40">
-          <Link href="/festivals" className="rounded-lg border border-[var(--card-border)] px-5 py-2.5 text-sm font-medium transition hover:bg-gray-100 dark:hover:bg-gray-800">
+        <div className="flex flex-col-reverse gap-3 border-t border-[var(--card-border)] bg-gray-50 px-4 py-4 sm:flex-row sm:justify-end sm:px-6 dark:bg-gray-800/40">
+          <Link href="/festivals" className="flex min-h-11 items-center justify-center rounded-lg border border-[var(--card-border)] px-5 py-2.5 text-sm font-medium transition hover:bg-gray-100 dark:hover:bg-gray-800">
             Cancel
           </Link>
-          <button type="submit" className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
+          <button type="submit" className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700">
             <Save className="h-4 w-4" />
             Create Festival
           </button>

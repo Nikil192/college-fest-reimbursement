@@ -54,19 +54,19 @@ export default async function Dashboard() {
   };
 
   return (
-    <div className="p-8">
+    <div className="page-container">
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-gray-500">Financial status of all festivals for the 2026-27 academic year.</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-6 shadow-sm">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6 mb-8">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5 sm:p-6 shadow-sm min-w-0">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-gray-500 mb-1">Total Budget</p>
-              <h3 className="text-2xl font-bold">{formatCurrency(totalBudget)}</h3>
+              <p className="text-2xl font-bold break-words">{formatCurrency(totalBudget)}</p>
             </div>
             <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
               <Banknote className="w-5 h-5 text-blue-600 dark:text-blue-400" />
@@ -74,11 +74,11 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5 sm:p-6 shadow-sm min-w-0">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-gray-500 mb-1">Total Approved</p>
-              <h3 className="text-2xl font-bold">{formatCurrency(totalApproved)}</h3>
+              <p className="text-2xl font-bold break-words">{formatCurrency(totalApproved)}</p>
             </div>
             <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
               <PartyPopper className="w-5 h-5 text-purple-600 dark:text-purple-400" />
@@ -86,11 +86,11 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5 sm:p-6 shadow-sm min-w-0">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-gray-500 mb-1">Total Paid</p>
-              <h3 className="text-2xl font-bold">{formatCurrency(totalPaid)}</h3>
+              <p className="text-2xl font-bold break-words">{formatCurrency(totalPaid)}</p>
             </div>
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
               <CreditCard className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -98,11 +98,11 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-6 shadow-sm">
+        <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-5 sm:p-6 shadow-sm min-w-0">
           <div className="flex justify-between items-start">
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-medium text-gray-500 mb-1">Pending Payment</p>
-              <h3 className="text-2xl font-bold text-[var(--color-warning)]">{formatCurrency(pendingPayment)}</h3>
+              <p className="text-2xl font-bold text-[var(--color-warning)] break-words">{formatCurrency(pendingPayment)}</p>
             </div>
             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
               <Receipt className="w-5 h-5 text-amber-600 dark:text-amber-400" />
@@ -115,7 +115,7 @@ export default async function Dashboard() {
         {/* Needs Attention Panel */}
         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-sm col-span-1">
           <div className="p-6 border-b border-[var(--card-border)]">
-            <h3 className="text-lg font-semibold text-red-600 dark:text-red-400">Needs Attention</h3>
+            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400">Needs Attention</h2>
           </div>
           <div className="p-6">
             <ul className="space-y-4">
@@ -137,31 +137,32 @@ export default async function Dashboard() {
 
         {/* Recent Activity Table */}
         <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-sm col-span-1 lg:col-span-2">
-          <div className="p-6 border-b border-[var(--card-border)] flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Recent Reimbursements</h3>
-            <Link href="/reimbursements" className="text-sm text-blue-600 hover:underline">View All</Link>
+          <div className="p-4 sm:p-6 border-b border-[var(--card-border)] flex flex-wrap justify-between items-center gap-2">
+            <h2 className="text-lg font-semibold">Recent Reimbursements</h2>
+            <Link href="/reimbursements" className="inline-flex min-h-11 items-center text-sm text-blue-600 hover:underline">View All</Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
+            <table className="responsive-table w-full text-sm text-left">
+              <caption className="sr-only">Five most recently updated reimbursements</caption>
               <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
                 <tr>
-                  <th className="px-6 py-3">ID</th>
-                  <th className="px-6 py-3">Payee</th>
-                  <th className="px-6 py-3">Festival</th>
-                  <th className="px-6 py-3">Amount</th>
-                  <th className="px-6 py-3">Status</th>
+                  <th scope="col" className="px-6 py-3">ID</th>
+                  <th scope="col" className="px-6 py-3">Payee</th>
+                  <th scope="col" className="px-6 py-3">Festival</th>
+                  <th scope="col" className="px-6 py-3">Amount</th>
+                  <th scope="col" className="px-6 py-3">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {reimbursements.length > 0 ? reimbursements.map((r) => (
                   <tr key={r.id} className="border-b border-[var(--card-border)] hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                    <td className="px-6 py-4 font-medium text-blue-600 hover:underline">
-                      <Link href={`/reimbursements/${r.reimbursementNumber}`}>{r.reimbursementNumber}</Link>
+                    <td data-label="ID" className="px-6 py-4 font-medium text-blue-600 hover:underline">
+                      <Link className="inline-flex min-h-11 items-center" href={`/reimbursements/${r.reimbursementNumber}`}>{r.reimbursementNumber}</Link>
                     </td>
-                    <td className="px-6 py-4">{r.payee?.name}</td>
-                    <td className="px-6 py-4">{r.festival?.name}</td>
-                    <td className="px-6 py-4">{formatCurrency(r.requestedAmount)}</td>
-                    <td className="px-6 py-4">
+                    <td data-label="Payee" className="px-6 py-4">{r.payee?.name}</td>
+                    <td data-label="Festival" className="px-6 py-4">{r.festival?.name}</td>
+                    <td data-label="Amount" className="px-6 py-4">{formatCurrency(r.requestedAmount)}</td>
+                    <td data-label="Status" className="px-6 py-4">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium 
                         ${r.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : ''}
                         ${r.status === 'PAYMENT_PENDING' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : ''}

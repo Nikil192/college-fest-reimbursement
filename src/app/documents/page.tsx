@@ -16,8 +16,8 @@ export default async function DocumentsPage() {
   });
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="page-container">
+      <div className="page-header">
         <div>
           <h1 className="text-2xl font-bold">Document Repository</h1>
           <p className="text-gray-500">Bills and receipts stored securely on this server.</p>
@@ -26,45 +26,45 @@ export default async function DocumentsPage() {
 
       <div className="bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="responsive-table w-full text-sm text-left">
+            <caption className="sr-only">Uploaded reimbursement documents</caption>
             <thead className="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-800/50">
               <tr>
-                <th className="px-6 py-3">File Name</th>
-                <th className="px-6 py-3">Type</th>
-                <th className="px-6 py-3">Reimbursement ID</th>
-                <th className="px-6 py-3">Payee</th>
-                <th className="px-6 py-3">Festival</th>
-                <th className="px-6 py-3">Uploaded Date</th>
-                <th className="px-6 py-3 text-right">File Action</th>
+                <th scope="col" className="px-6 py-3">File Name</th>
+                <th scope="col" className="px-6 py-3">Type</th>
+                <th scope="col" className="px-6 py-3">Reimbursement ID</th>
+                <th scope="col" className="px-6 py-3">Payee</th>
+                <th scope="col" className="px-6 py-3">Festival</th>
+                <th scope="col" className="px-6 py-3">Uploaded Date</th>
+                <th scope="col" className="px-6 py-3 text-right">File Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--card-border)]">
               {documents.map(doc => (
                 <tr key={doc.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                  <td className="px-6 py-4 font-medium flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-blue-500" />
-                    {doc.fileName}
+                  <td data-label="File Name" className="px-6 py-4 font-medium">
+                    <span className="flex justify-end gap-2 md:justify-start"><FileText className="w-4 h-4 shrink-0 text-blue-500" />{doc.fileName}</span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td data-label="Type" className="px-6 py-4">
                     <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
                       {doc.documentType}
                     </span>
                   </td>
-                  <td className="px-6 py-4 font-medium text-blue-600 hover:underline">
-                    <Link href={`/reimbursements/${doc.reimbursement.reimbursementNumber}`}>
+                  <td data-label="Reimbursement ID" className="px-6 py-4 font-medium text-blue-600 hover:underline">
+                    <Link className="inline-flex min-h-11 items-center" href={`/reimbursements/${doc.reimbursement.reimbursementNumber}`}>
                       {doc.reimbursement.reimbursementNumber}
                     </Link>
                   </td>
-                  <td className="px-6 py-4">{doc.reimbursement.payee.name}</td>
-                  <td className="px-6 py-4">{doc.reimbursement.festival.name}</td>
-                  <td className="px-6 py-4 text-gray-500">{new Date(doc.uploadedAt).toLocaleDateString()}</td>
-                  <td className="px-6 py-4 text-right">
+                  <td data-label="Payee" className="px-6 py-4">{doc.reimbursement.payee.name}</td>
+                  <td data-label="Festival" className="px-6 py-4">{doc.reimbursement.festival.name}</td>
+                  <td data-label="Uploaded Date" className="px-6 py-4 text-gray-500">{new Date(doc.uploadedAt).toLocaleDateString()}</td>
+                  <td data-label="File Action" className="px-6 py-4 text-right">
                     {doc.storageKey ? (
                       <a
                         href={`/api/documents/${doc.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-xs font-medium inline-flex items-center gap-1"
+                        className="text-blue-600 hover:underline text-xs font-medium inline-flex min-h-11 items-center gap-1"
                       >
                         Open File <ExternalLink className="w-3 h-3" />
                       </a>

@@ -35,3 +35,113 @@ body {
   background: var(--background);
   color: var(--foreground);
 }
+
+.page-container {
+  padding: 1rem;
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.touch-target {
+  min-height: 2.75rem;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding: 1.5rem;
+  }
+
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-container {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .responsive-table {
+    display: block;
+  }
+
+  .responsive-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .responsive-table tbody,
+  .responsive-table tr,
+  .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .responsive-table tbody {
+    padding: 0 1rem;
+  }
+
+  .responsive-table tbody tr {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--card-border);
+  }
+
+  .responsive-table tbody tr:last-child {
+    border-bottom: 0;
+  }
+
+  .responsive-table tbody td {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.4rem 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .responsive-table tbody td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    text-align: left;
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .responsive-table tbody td[colspan] {
+    display: block;
+    text-align: center;
+    padding: 1.5rem 0;
+  }
+
+  .responsive-table tbody td[colspan]::before {
+    content: none;
+  }
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+}

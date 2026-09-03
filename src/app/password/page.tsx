@@ -42,7 +42,7 @@ export default function PasswordPage() {
   }
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#101820] px-5 py-12 text-slate-100">
+    <main className="relative flex min-h-screen items-center justify-center overflow-x-hidden bg-[#101820] px-5 py-12 text-slate-100">
       <div className="absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(255,255,255,.045)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.045)_1px,transparent_1px)] [background-size:44px_44px]" />
       <div className="absolute -left-32 top-1/3 h-80 w-80 rounded-full bg-blue-500/15 blur-3xl" />
       <div className="absolute -right-32 bottom-1/4 h-80 w-80 rounded-full bg-amber-400/10 blur-3xl" />
@@ -61,7 +61,7 @@ export default function PasswordPage() {
         </div>
 
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight">Enter access password</h1>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Enter access password</h1>
           <p className="mt-3 text-sm leading-6 text-slate-400">
             This reimbursement workspace is limited to authorized festival staff.
           </p>
@@ -84,6 +84,8 @@ export default function PasswordPage() {
               autoFocus
               className="h-12 w-full border border-white/15 bg-black/20 pl-11 pr-4 text-sm text-white outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-300/15"
               id="site-password"
+              aria-describedby={error ? "password-error" : undefined}
+              aria-invalid={Boolean(error)}
               name="password"
               onChange={(event) => {
                 setPassword(event.target.value);
@@ -96,12 +98,13 @@ export default function PasswordPage() {
           </div>
 
           <div aria-live="polite" className="min-h-10 pt-2">
-            {error && <p className="text-sm text-red-300">{error}</p>}
+            {error && <p id="password-error" className="text-sm text-red-300">{error}</p>}
           </div>
 
           <button
             className="flex h-12 w-full items-center justify-center bg-blue-400 px-5 text-sm font-bold text-[#101820] transition hover:bg-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:ring-offset-2 focus:ring-offset-[#16212b] disabled:cursor-wait disabled:opacity-70"
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
             type="submit"
           >
             {isSubmitting ? "Checking..." : "Unlock workspace"}
