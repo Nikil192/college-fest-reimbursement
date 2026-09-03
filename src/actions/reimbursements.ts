@@ -84,6 +84,9 @@ export async function submitReimbursement(formData: FormData) {
     }
   }
 
+  revalidatePath('/');
+  revalidatePath('/documents');
+  revalidatePath('/payees');
   revalidatePath('/reimbursements');
   redirect(`/reimbursements/${reimbursementNumber}`);
 }
