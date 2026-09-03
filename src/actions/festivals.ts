@@ -67,5 +67,6 @@ export async function createFestival(formData: FormData) {
 
   revalidatePath('/');
   revalidatePath('/festivals');
+  revalidatePath('/reimbursements/new');
   redirect('/festivals');
 }

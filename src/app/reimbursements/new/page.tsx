@@ -3,9 +3,11 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { submitReimbursement } from "@/actions/reimbursements";
 
+export const dynamic = 'force-dynamic';
+
 export default async function NewReimbursementPage() {
   const festivals = await prisma.festival.findMany({
-    where: { status: 'ACTIVE' },
+    where: { status: { in: ['PLANNED', 'ACTIVE'] } },
     orderBy: { name: 'asc' }
   });
 
