@@ -37,6 +37,9 @@ jobs:
       - name: Validate Prisma schema
         run: npx prisma validate
 
+      - name: Apply migrations to test database
+        run: npm run db:deploy
+
       - name: Lint
         run: npm run lint
 
