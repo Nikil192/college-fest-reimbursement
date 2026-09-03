@@ -2,6 +2,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { submitReimbursement } from "@/actions/reimbursements";
+import { getIndiaDateInputValue } from "@/lib/dates";
 
 export const dynamic = 'force-dynamic';
 
@@ -75,6 +76,7 @@ export default async function NewReimbursementPage() {
                 <input 
                   type="date" 
                   name="expenseDate"
+                  defaultValue={getIndiaDateInputValue()}
                   required
                   className="w-full border border-[var(--card-border)] rounded-lg bg-white dark:bg-gray-900 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />

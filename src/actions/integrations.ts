@@ -23,61 +23,134 @@ interface PaymentData {
 export async function sendWhatsAppConfirmation(reimbursementId: string) {
   const reimbursement = await prisma.reimbursement.findUnique({
     where: { id: reimbursementId },
-    include: { payee: true, festival: true, payments: true }
+    include: {
+      payee: true,
+      festival: true,
+      payments: { orderBy: { createdAt: 'desc' }, take: 1 }
+    }
   });
 
-  if (!reimbursement || !reimbursement.payee.phone) {
-    return { success: false, error: 'Missing required data for WhatsApp message.' };
+  if (!reimbursement) {
+    return { success: false, error: 'Reimbursement not found.' };
   }
 
-  const messageText = `Payment Confirmation: Your reimbursement of Rs. ${reimbursement.paidAmount} for ${reimbursement.festival.name} has been processed. Transaction ID: ${reimbursement.payments[0]?.transactionId || 'N/A'}`;
-  const wacliCommand = process.env.WACLI_COMMAND;
-
-  if (!wacliCommand) {
-    await prisma.whatsAppMessage.create({
-      data: {
-        reimbursementId: reimbursement.id,
-        recipientPhone: reimbursement.payee.phone,
-        messageTemplate: messageText,
-        status: 'FAILED',
-        failureReason: 'WACLI_COMMAND is not configured.'
-      }
-    });
-
-    return { success: false, error: 'WhatsApp service is not configured.' };
+  if (reimbursement.status !== 'PAID' || reimbursement.paidAmount === null) {
+    return { success: false, error: 'The reimbursement must be marked as paid first.' };
   }
+
+  if (!reimbursement.payee.phone) {
+    return { success: false, error: 'The payee does not have a WhatsApp number.' };
+  }
+
+  const payment = reimbursement.payments[0];
+  if (!payment) {
+    return { success: false, error: 'Payment details could not be found.' };
+  }
+
+  const phoneDigits = reimbursement.payee.phone.replace(/\D/g, '');
+  const recipientPhone = phoneDigits.length === 10
+    ? `91${phoneDigits}`
+    : phoneDigits.startsWith('00')
+      ? phoneDigits.slice(2)
+      : phoneDigits;
+
+  if (recipientPhone.length < 8 || recipientPhone.length > 15) {
+    return { success: false, error: 'The payee WhatsApp number is invalid.' };
+  }
+
+  const amount = new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: reimbursement.currency,
+    maximumFractionDigits: 2
+  }).format(reimbursement.paidAmount);
+  const paymentDate = new Intl.DateTimeFormat('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  }).format(payment.paymentDate);
+  const messageText = [
+    `Hi ${reimbursement.payee.name},`,
+    '',
+    `${amount} has been transferred to you for reimbursement ${reimbursement.reimbursementNumber}.`,
+    '',
+    `Festival: ${reimbursement.festival.name}`,
+    `Category: ${reimbursement.category}`,
+    `Payment method: ${payment.paymentMethod}`,
+    `Transaction reference: ${payment.transactionId || 'N/A'}`,
+    `Payment date: ${paymentDate}`,
+    '',
+    'Please contact the festival administration team if you have any questions.'
+  ].join('\n');
+  const messageRecord = await prisma.whatsAppMessage.create({
+    data: {
+      reimbursementId: reimbursement.id,
+      recipientPhone,
+      messageTemplate: messageText,
+      status: 'QUEUED'
+    }
+  });
+  const wacliCommand = process.env.WACLI_COMMAND || 'wacli';
 
   try {
-    await execFileAsync(wacliCommand, ['send', '--phone', reimbursement.payee.phone, '--message', messageText]);
+    await execFileAsync(
+      wacliCommand,
+      [
+        '--json',
+        '--timeout',
+        '30s',
+        'send',
+        'text',
+        '--to',
+        recipientPhone,
+        '--message',
+        messageText
+      ],
+      { timeout: 45_000 }
+    );
 
-    // Record the message in our database
-    await prisma.whatsAppMessage.create({
-      data: {
-        reimbursementId: reimbursement.id,
-        recipientPhone: reimbursement.payee.phone,
-        messageTemplate: messageText,
-        status: "DELIVERED",
-        sentAt: new Date(),
-        deliveredAt: new Date()
-      }
-    });
+    await prisma.$transaction([
+      prisma.whatsAppMessage.update({
+        where: { id: messageRecord.id },
+        data: {
+          status: 'SENT',
+          sentAt: new Date()
+        }
+      }),
+      prisma.auditLog.create({
+        data: {
+          entityType: 'WhatsAppMessage',
+          entityId: messageRecord.id,
+          action: 'SENT_CONFIRMATION_WACLI',
+          newValue: 'SENT',
+          reason: `Payment confirmation sent to ${recipientPhone} via wacli.`
+        }
+      })
+    ]);
 
-    // Create an audit log
-    await prisma.auditLog.create({
+    revalidatePath(`/reimbursements/${reimbursement.reimbursementNumber}`);
+    revalidatePath('/notifications');
+    return { success: true };
+  } catch (error) {
+    console.error('WhatsApp Integration Error (wacli):', error);
+
+    const failureReason = error instanceof Error
+      ? error.message.slice(0, 500)
+      : 'Unknown wacli error';
+
+    await prisma.whatsAppMessage.update({
+      where: { id: messageRecord.id },
       data: {
-        entityType: 'WhatsAppMessage',
-        entityId: reimbursement.id,
-        action: 'SENT_CONFIRMATION_WACLI',
-        newValue: 'DELIVERED',
-        reason: 'Automated payment confirmation sent to payee via wacli.'
+        status: 'FAILED',
+        failureReason
       }
     });
 
     revalidatePath(`/reimbursements/${reimbursement.reimbursementNumber}`);
-    return { success: true };
-  } catch (error) {
-    console.error("WhatsApp Integration Error (wacli):", error);
-    return { success: false, error: "Failed to send message via wacli." };
+    revalidatePath('/notifications');
+    return {
+      success: false,
+      error: 'wacli could not send the message. Check its authentication and connection.'
+    };
   }
 }
 
@@ -125,9 +198,6 @@ export async function markAsPaid(reimbursementId: string, paymentData: PaymentDa
         }
       });
     });
-
-    // Optionally trigger WhatsApp message async
-    await sendWhatsAppConfirmation(reimbursement.id);
 
     revalidatePath(`/reimbursements/${reimbursement.reimbursementNumber}`);
     return { success: true };

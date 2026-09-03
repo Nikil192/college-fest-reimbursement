@@ -4,7 +4,6 @@ import prisma from '@/lib/prisma';
 import { deleteStoredDocument, storeDocument } from '@/lib/document-storage';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { sendWhatsAppConfirmation } from './integrations';
 
 export async function submitReimbursement(formData: FormData) {
   const festivalId = formData.get('festivalId') as string;
@@ -214,13 +213,6 @@ export async function recordPayment(reimbursementId: string, formData: FormData)
       }
     })
   ]);
-
-  // Trigger WhatsApp notification via wacli integration
-  try {
-    await sendWhatsAppConfirmation(reimbursementId);
-  } catch (err) {
-    console.error("WhatsApp trigger error:", err);
-  }
 
   revalidatePath(`/reimbursements/${reimbursement.reimbursementNumber}`);
   revalidatePath('/reimbursements');

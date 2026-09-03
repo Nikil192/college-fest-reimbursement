@@ -1,4 +1,4 @@
-import { open } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import prisma from '@/lib/prisma';
 import { getStoredDocumentPath } from '@/lib/document-storage';
 
@@ -19,14 +19,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const file = await open(getStoredDocumentPath(document.storageKey));
-    const { size } = await file.stat();
+    const file = await readFile(getStoredDocumentPath(document.storageKey));
 
-    return new Response(file.readableWebStream() as unknown as ReadableStream, {
+    return new Response(file, {
       headers: {
         'Cache-Control': 'private, no-store',
         'Content-Disposition': contentDisposition(document.fileName),
-        'Content-Length': String(size),
+        'Content-Length': String(file.byteLength),
         'Content-Type': document.fileType,
         'X-Content-Type-Options': 'nosniff',
       },

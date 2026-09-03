@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Clock3, XCircle } from "lucide-react";
 
 export default async function NotificationsPage() {
   const messages = await prisma.whatsAppMessage.findMany({
@@ -36,20 +36,32 @@ export default async function NotificationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--card-border)]">
-              {messages.map(msg => (
-                <tr key={msg.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
-                  <td className="px-6 py-4 font-medium text-green-600 font-mono text-xs">{msg.recipientPhone}</td>
-                  <td className="px-6 py-4">{msg.reimbursement.payee.name}</td>
-                  <td className="px-6 py-4 font-medium">{msg.reimbursement.reimbursementNumber}</td>
-                  <td className="px-6 py-4 max-w-md truncate text-gray-600 dark:text-gray-300 text-xs">{msg.messageTemplate}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 inline-flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" /> {msg.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500 text-xs">{msg.sentAt ? new Date(msg.sentAt).toLocaleString() : '-'}</td>
-                </tr>
-              ))}
+              {messages.map(msg => {
+                const isSent = ['SENT', 'DELIVERED'].includes(msg.status);
+                const isFailed = msg.status === 'FAILED';
+                const StatusIcon = isSent ? CheckCircle : isFailed ? XCircle : Clock3;
+
+                return (
+                  <tr key={msg.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
+                    <td className="px-6 py-4 font-medium text-green-600 font-mono text-xs">{msg.recipientPhone}</td>
+                    <td className="px-6 py-4">{msg.reimbursement.payee.name}</td>
+                    <td className="px-6 py-4 font-medium">{msg.reimbursement.reimbursementNumber}</td>
+                    <td className="px-6 py-4 max-w-md truncate text-gray-600 dark:text-gray-300 text-xs">{msg.messageTemplate}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-semibold inline-flex items-center gap-1 ${
+                        isSent
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                          : isFailed
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                      }`}>
+                        <StatusIcon className="w-3 h-3" /> {msg.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500 text-xs">{msg.sentAt ? new Date(msg.sentAt).toLocaleString() : '-'}</td>
+                  </tr>
+                );
+              })}
 
               {messages.length === 0 && (
                 <tr>

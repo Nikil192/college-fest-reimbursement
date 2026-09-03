@@ -19,7 +19,7 @@ export default function SettingsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-1">WhatsApp CLI (wacli) Integration</h3>
               <p className="text-sm text-gray-500 mb-4">
-                Automated payment notifications are triggered via <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-xs text-green-600">wacli</code> when payments are recorded.
+                Payment notifications can be sent via <code className="bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded font-mono text-xs text-green-600">wacli</code> after a reimbursement is marked as paid.
               </p>
               
               <div className="space-y-3 bg-gray-50 dark:bg-gray-800/40 p-4 rounded-lg border border-[var(--card-border)]">
@@ -31,7 +31,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="font-medium">Command Driver</span>
-                  <span className="font-mono text-xs">npx wacli send --phone ...</span>
+                  <span className="font-mono text-xs">wacli send text --to ...</span>
                 </div>
               </div>
             </div>

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, CreditCard, FileText } from 'lucide-react';
+import { Check, X, CreditCard, FileText, MessageCircle } from 'lucide-react';
 import { approveReimbursement, rejectReimbursement, recordPayment } from '@/actions/reimbursements';
+import { sendWhatsAppConfirmation } from '@/actions/integrations';
+import { getIndiaDateInputValue } from '@/lib/dates';
 
 interface Props {
   reimbursement: {
@@ -11,6 +13,9 @@ interface Props {
     requestedAmount: number;
     approvedAmount: number | null;
     status: string;
+    payee: {
+      phone: string | null;
+    };
   };
 }
 
@@ -25,6 +30,11 @@ export default function ReimbursementActions({ reimbursement }: Props) {
   const [rejectReason, setRejectReason] = useState('');
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [whatsAppResult, setWhatsAppResult] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const handleApprove = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,18 +80,56 @@ export default function ReimbursementActions({ reimbursement }: Props) {
   const isPaymentPending = reimbursement.status === 'PAYMENT_PENDING';
   const isPaid = reimbursement.status === 'PAID';
 
+  const handleWhatsAppNotification = async () => {
+    if (!window.confirm(`Send payment confirmation to ${reimbursement.payee.phone}?`)) {
+      return;
+    }
+
+    setIsSendingWhatsApp(true);
+    setWhatsAppResult(null);
+
+    try {
+      const result = await sendWhatsAppConfirmation(reimbursement.id);
+      setWhatsAppResult({
+        type: result.success ? 'success' : 'error',
+        message: result.success
+          ? 'WhatsApp notification sent successfully.'
+          : result.error || 'Failed to send WhatsApp notification.'
+      });
+    } catch {
+      setWhatsAppResult({
+        type: 'error',
+        message: 'Failed to send WhatsApp notification.'
+      });
+    } finally {
+      setIsSendingWhatsApp(false);
+    }
+  };
+
   return (
     <div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap justify-end gap-3">
         {isPaid && (
-          <a
-            href={`/reimbursements/${reimbursement.reimbursementNumber}/receipt`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 border border-[var(--card-border)] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-          >
-            <FileText className="w-4 h-4 text-blue-600" /> Print Receipt
-          </a>
+          <>
+            <button
+              type="button"
+              onClick={handleWhatsAppNotification}
+              disabled={isSendingWhatsApp || !reimbursement.payee.phone}
+              title={reimbursement.payee.phone ? undefined : 'Add a phone number to the payee first'}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium shadow-sm transition-colors"
+            >
+              <MessageCircle className="w-4 h-4" />
+              {isSendingWhatsApp ? 'Sending...' : 'Send WhatsApp Notification'}
+            </button>
+            <a
+              href={`/reimbursements/${reimbursement.reimbursementNumber}/receipt`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 px-4 py-2 border border-[var(--card-border)] rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              <FileText className="w-4 h-4 text-blue-600" /> Print Receipt
+            </a>
+          </>
         )}
 
         {isPaymentPending && (
@@ -110,6 +158,19 @@ export default function ReimbursementActions({ reimbursement }: Props) {
           </div>
         )}
       </div>
+
+      {whatsAppResult && (
+        <p
+          role="status"
+          className={`mt-2 text-right text-sm ${
+            whatsAppResult.type === 'success'
+              ? 'text-green-600 dark:text-green-400'
+              : 'text-red-600 dark:text-red-400'
+          }`}
+        >
+          {whatsAppResult.message}
+        </p>
+      )}
 
       {/* APPROVE MODAL */}
       {showApproveModal && (
@@ -238,7 +299,7 @@ export default function ReimbursementActions({ reimbursement }: Props) {
                 <input
                   type="date"
                   name="paymentDate"
-                  defaultValue={new Date().toISOString().split('T')[0]}
+                  defaultValue={getIndiaDateInputValue()}
                   required
                   className="w-full border border-[var(--card-border)] rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm"
                 />
@@ -266,7 +327,7 @@ export default function ReimbursementActions({ reimbursement }: Props) {
                   disabled={isSubmitting}
                   className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
                 >
-                  {isSubmitting ? 'Processing...' : 'Record Payment & Send Notification'}
+                  {isSubmitting ? 'Processing...' : 'Record Payment'}
                 </button>
               </div>
             </form>

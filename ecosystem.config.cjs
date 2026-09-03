@@ -13,6 +13,8 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: '3001',
+        WACLI_COMMAND: '/home/ubuntu/.local/bin/wacli',
+        WACLI_STORE_DIR: '/home/ubuntu/.local/state/wacli',
       },
     },
   ],
