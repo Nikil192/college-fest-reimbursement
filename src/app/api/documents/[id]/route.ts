@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { open } from 'node:fs/promises';
 import prisma from '@/lib/prisma';
 import { getStoredDocumentPath } from '@/lib/document-storage';
 
@@ -19,7 +19,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   try {
-    const file = await readFile(getStoredDocumentPath(document.storageKey));
+    const handle = await open(getStoredDocumentPath(document.storageKey), 'r');
+    const file = await (async () => {
+      try {
+        return await handle.readFile();
+      } finally {
+        await handle.close();
+      }
+    })();
 
     return new Response(file, {
       headers: {

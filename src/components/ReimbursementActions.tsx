@@ -1,8 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Check, X, CreditCard, FileText, MessageCircle } from 'lucide-react';
-import { approveReimbursement, rejectReimbursement, recordPayment } from '@/actions/reimbursements';
+import { useRouter } from 'next/navigation';
+import { Check, X, CreditCard, FileText, LoaderCircle, MessageCircle, Trash2 } from 'lucide-react';
+import { approveReimbursement, deleteReimbursement, rejectReimbursement, recordPayment } from '@/actions/reimbursements';
 import { sendWhatsAppConfirmation } from '@/actions/integrations';
 import { getIndiaDateInputValue } from '@/lib/dates';
 
@@ -20,9 +21,11 @@ interface Props {
 }
 
 export default function ReimbursementActions({ reimbursement }: Props) {
+  const router = useRouter();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [approveAmount, setApproveAmount] = useState(reimbursement.requestedAmount);
   const [approveNotes, setApproveNotes] = useState('');
@@ -31,6 +34,8 @@ export default function ReimbursementActions({ reimbursement }: Props) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [whatsAppResult, setWhatsAppResult] = useState<{
     type: 'success' | 'error';
     message: string;
@@ -80,19 +85,40 @@ export default function ReimbursementActions({ reimbursement }: Props) {
   const isPaymentPending = reimbursement.status === 'PAYMENT_PENDING';
   const isPaid = reimbursement.status === 'PAID';
 
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    setDeleteError('');
+
+    try {
+      const result = await deleteReimbursement(reimbursement.id);
+      if (!result.success) {
+        setDeleteError(result.error || 'Failed to delete reimbursement.');
+        return;
+      }
+
+      router.push('/reimbursements');
+      router.refresh();
+    } catch {
+      setDeleteError('Failed to delete reimbursement. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   useEffect(() => {
-    if (!showApproveModal && !showRejectModal && !showPaymentModal) return;
+    if (!showApproveModal && !showRejectModal && !showPaymentModal && !showDeleteModal) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       setShowApproveModal(false);
       setShowRejectModal(false);
       setShowPaymentModal(false);
+      if (!isDeleting) setShowDeleteModal(false);
     };
 
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [showApproveModal, showPaymentModal, showRejectModal]);
+  }, [isDeleting, showApproveModal, showDeleteModal, showPaymentModal, showRejectModal]);
 
   const handleWhatsAppNotification = async () => {
     if (!window.confirm(`Send payment confirmation to ${reimbursement.payee.phone}?`)) {
@@ -171,6 +197,16 @@ export default function ReimbursementActions({ reimbursement }: Props) {
             </button>
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => {
+            setDeleteError('');
+            setShowDeleteModal(true);
+          }}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-2 font-medium text-red-700 transition-colors hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/30"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" /> Delete
+        </button>
       </div>
 
       {whatsAppResult && (
@@ -227,8 +263,9 @@ export default function ReimbursementActions({ reimbursement }: Props) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="min-h-11 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:cursor-wait disabled:bg-green-400"
                 >
+                  {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
                   {isSubmitting ? 'Approving...' : 'Confirm Approval'}
                 </button>
               </div>
@@ -267,8 +304,9 @@ export default function ReimbursementActions({ reimbursement }: Props) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="min-h-11 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 disabled:cursor-wait disabled:bg-red-400"
                 >
+                  {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
                   {isSubmitting ? 'Rejecting...' : 'Confirm Rejection'}
                 </button>
               </div>
@@ -349,12 +387,36 @@ export default function ReimbursementActions({ reimbursement }: Props) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="min-h-11 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:cursor-wait disabled:bg-green-400"
                 >
+                  {isSubmitting && <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />}
                   {isSubmitting ? 'Processing...' : 'Record Payment'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/50 p-4 sm:items-center">
+          <div role="dialog" aria-modal="true" aria-labelledby="delete-title" className="w-full max-w-md space-y-4 rounded-xl border border-[var(--card-border)] bg-white p-4 shadow-xl dark:bg-gray-900 sm:p-6">
+            <div>
+              <h2 id="delete-title" className="text-lg font-bold text-red-700 dark:text-red-400">Delete reimbursement?</h2>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                This permanently deletes {reimbursement.reimbursementNumber}, its payments, notes, and attached documents. This action cannot be undone.
+              </p>
+            </div>
+            {deleteError && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{deleteError}</p>}
+            <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
+              <button type="button" disabled={isDeleting} onClick={() => setShowDeleteModal(false)} className="min-h-11 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-gray-100 disabled:opacity-60 dark:hover:bg-gray-800">
+                Cancel
+              </button>
+              <button type="button" disabled={isDeleting} onClick={handleDelete} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-wait disabled:bg-red-400">
+                {isDeleting ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+                {isDeleting ? 'Deleting...' : 'Delete permanently'}
+              </button>
+            </div>
           </div>
         </div>
       )}

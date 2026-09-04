@@ -3,6 +3,7 @@ import Link from "next/link";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import ReimbursementActions from "@/components/ReimbursementActions";
+import DocumentUploadForm from "@/components/DocumentUploadForm";
 
 export default async function ReimbursementDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
@@ -102,6 +103,10 @@ export default async function ReimbursementDetailPage({ params }: { params: Prom
                   <p className="text-gray-500">No documents attached.</p>
                 </div>
               )}
+              <div className="mt-5 border-t border-[var(--card-border)] pt-5">
+                <h3 className="mb-3 text-sm font-semibold">Add an invoice</h3>
+                <DocumentUploadForm reimbursementId={reimbursement.id} />
+              </div>
             </div>
           </div>
 

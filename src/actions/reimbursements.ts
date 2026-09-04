@@ -5,35 +5,77 @@ import { deleteStoredDocument, storeDocument } from '@/lib/document-storage';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function submitReimbursement(formData: FormData) {
-  const festivalId = formData.get('festivalId') as string;
-  const category = formData.get('category') as string;
-  const description = formData.get('description') as string;
-  const amount = parseFloat(formData.get('amount') as string);
-  const expenseDate = formData.get('expenseDate') as string;
+export type ReimbursementFormState = {
+  error?: string;
+  success?: string;
+};
 
-  const payeeName = formData.get('payeeName') as string;
-  const studentId = formData.get('studentId') as string;
-  const phone = formData.get('phone') as string;
-  const upiId = formData.get('upiId') as string;
-  
-  const file = formData.get('file');
+function requiredString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === 'string' ? value.trim() : '';
+}
 
-  if (!(file instanceof File)) {
-    throw new Error('A document is required.');
+function documentErrorMessage(error: unknown) {
+  if (error instanceof Error && [
+    'A document is required.',
+    'Documents must be 10 MB or smaller.',
+    'Only PDF, JPEG, PNG, and WebP documents are supported.',
+  ].includes(error.message)) {
+    return error.message;
   }
 
-  const storedDocument = await storeDocument(file);
+  return null;
+}
+
+export async function submitReimbursement(
+  _previousState: ReimbursementFormState,
+  formData: FormData,
+): Promise<ReimbursementFormState> {
+  const festivalId = requiredString(formData, 'festivalId');
+  const category = requiredString(formData, 'category');
+  const description = requiredString(formData, 'description');
+  const amount = Number(requiredString(formData, 'amount'));
+  const expenseDate = requiredString(formData, 'expenseDate');
+
+  const payeeName = requiredString(formData, 'payeeName');
+  const studentId = requiredString(formData, 'studentId');
+  const phone = requiredString(formData, 'phone');
+  const upiId = requiredString(formData, 'upiId');
+  const file = formData.get('file');
+  const hasDocument = file instanceof File && file.size > 0;
+
+  if (!festivalId || !category || !description || !payeeName || !phone || !expenseDate) {
+    return { error: 'Please complete all required fields.' };
+  }
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { error: 'Enter a valid reimbursement amount.' };
+  }
+
+  const festival = await prisma.festival.findFirst({
+    where: { id: festivalId, status: { in: ['PLANNED', 'ACTIVE'] } },
+    select: { id: true },
+  });
+
+  if (!festival) {
+    return { error: 'The selected festival is no longer available.' };
+  }
+
+  let storedDocument: Awaited<ReturnType<typeof storeDocument>> | null = null;
   const reimbursementNumber = `REIM-2026-${Math.floor(10000 + Math.random() * 90000)}`;
 
   try {
+    if (hasDocument) {
+      storedDocument = await storeDocument(file);
+    }
+
     await prisma.$transaction(async (tx) => {
       let payee = await tx.payee.findFirst({
         where: {
           OR: [
-            { phone: phone || undefined },
-            { studentId: studentId || undefined }
-          ]
+            { phone },
+            ...(studentId ? [{ studentId }] : []),
+          ],
         }
       });
 
@@ -72,25 +114,32 @@ export async function submitReimbursement(formData: FormData) {
         }
       });
 
-      await tx.document.create({
-        data: {
-          reimbursementId: reimbursement.id,
-          documentType: 'BILL',
-          fileName: file.name,
-          fileType: storedDocument.fileType,
-          fileSize: storedDocument.fileSize,
-          storageKey: storedDocument.storageKey
-        }
-      });
+      if (storedDocument && file instanceof File) {
+        await tx.document.create({
+          data: {
+            reimbursementId: reimbursement.id,
+            documentType: 'BILL',
+            fileName: file.name,
+            fileType: storedDocument.fileType,
+            fileSize: storedDocument.fileSize,
+            storageKey: storedDocument.storageKey
+          }
+        });
+      }
     });
   } catch (error) {
-    try {
-      await deleteStoredDocument(storedDocument.storageKey);
-    } catch (cleanupError) {
-      console.error('Failed to clean up document after reimbursement error:', cleanupError);
+    if (storedDocument) {
+      try {
+        await deleteStoredDocument(storedDocument.storageKey);
+      } catch (cleanupError) {
+        console.error('Failed to clean up document after reimbursement error:', cleanupError);
+      }
     }
 
-    throw error;
+    console.error('Failed to submit reimbursement:', error);
+    return {
+      error: documentErrorMessage(error) || 'Unable to submit the reimbursement. Please try again.',
+    };
   }
 
   revalidatePath('/');
@@ -98,6 +147,112 @@ export async function submitReimbursement(formData: FormData) {
   revalidatePath('/payees');
   revalidatePath('/reimbursements');
   redirect(`/reimbursements/${reimbursementNumber}`);
+}
+
+export async function uploadReimbursementDocument(
+  _previousState: ReimbursementFormState,
+  formData: FormData,
+): Promise<ReimbursementFormState> {
+  const reimbursementId = requiredString(formData, 'reimbursementId');
+  const file = formData.get('file');
+
+  if (!reimbursementId || !(file instanceof File) || file.size === 0) {
+    return { error: 'Choose an invoice document to upload.' };
+  }
+
+  const reimbursement = await prisma.reimbursement.findUnique({
+    where: { id: reimbursementId },
+    select: { reimbursementNumber: true },
+  });
+
+  if (!reimbursement) {
+    return { error: 'Reimbursement not found.' };
+  }
+
+  let storedDocument: Awaited<ReturnType<typeof storeDocument>> | null = null;
+
+  try {
+    storedDocument = await storeDocument(file);
+    await prisma.document.create({
+      data: {
+        reimbursementId,
+        documentType: 'BILL',
+        fileName: file.name,
+        fileType: storedDocument.fileType,
+        fileSize: storedDocument.fileSize,
+        storageKey: storedDocument.storageKey,
+      },
+    });
+  } catch (error) {
+    if (storedDocument) {
+      try {
+        await deleteStoredDocument(storedDocument.storageKey);
+      } catch (cleanupError) {
+        console.error('Failed to clean up document after upload error:', cleanupError);
+      }
+    }
+
+    console.error('Failed to upload reimbursement document:', error);
+    return {
+      error: documentErrorMessage(error) || 'Unable to upload the invoice. Please try again.',
+    };
+  }
+
+  revalidatePath('/documents');
+  revalidatePath(`/reimbursements/${reimbursement.reimbursementNumber}`);
+  return { success: 'Invoice attached successfully.' };
+}
+
+export async function deleteReimbursement(reimbursementId: string) {
+  const reimbursement = await prisma.reimbursement.findUnique({
+    where: { id: reimbursementId },
+    select: {
+      reimbursementNumber: true,
+      status: true,
+      documents: { select: { storageKey: true } },
+    },
+  });
+
+  if (!reimbursement) {
+    return { success: false, error: 'Reimbursement not found.' };
+  }
+
+  try {
+    await prisma.$transaction([
+      prisma.auditLog.create({
+        data: {
+          entityType: 'Reimbursement',
+          entityId: reimbursementId,
+          action: 'DELETED',
+          oldValue: reimbursement.status,
+          reason: `Deleted reimbursement ${reimbursement.reimbursementNumber}`,
+        },
+      }),
+      prisma.reimbursement.delete({ where: { id: reimbursementId } }),
+    ]);
+  } catch (error) {
+    console.error('Failed to delete reimbursement:', error);
+    return { success: false, error: 'Unable to delete the reimbursement. Please try again.' };
+  }
+
+  const cleanupResults = await Promise.allSettled(
+    reimbursement.documents.flatMap((document) =>
+      document.storageKey ? [deleteStoredDocument(document.storageKey)] : [],
+    ),
+  );
+
+  for (const result of cleanupResults) {
+    if (result.status === 'rejected') {
+      console.error('Failed to delete stored reimbursement document:', result.reason);
+    }
+  }
+
+  revalidatePath('/');
+  revalidatePath('/documents');
+  revalidatePath('/payees');
+  revalidatePath('/payments');
+  revalidatePath('/reimbursements');
+  return { success: true };
 }
 
 export async function approveReimbursement(reimbursementId: string, approvedAmount: number, notes?: string) {
